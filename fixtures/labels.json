@@ -1,0 +1,101 @@
+{
+  "document": "sample-document.txt",
+  "note": "Hand-authored ground truth for the detection pipeline. Offsets are codepoint indices into sample-document.txt; for every span text == sample[start:end] (verified programmatically). `spans` are sensitive and SHOULD be detected; `allowlist` entries look like PII but must be suppressed.",
+  "spans": [
+    {
+      "id": "p1",
+      "text": "Margaret Holloway",
+      "type": "PERSON",
+      "start": 48,
+      "end": 65,
+      "normalized_value": "margaret holloway",
+      "note": "Full name, anchored by the title 'Ms.' immediately before it."
+    },
+    {
+      "id": "p2",
+      "text": "Margaret",
+      "type": "PERSON",
+      "start": 669,
+      "end": 677,
+      "normalized_value": "margaret",
+      "note": "Same claimant, bare first name on second mention. Links to p1 by casefold of the shared token 'margaret'."
+    },
+    {
+      "id": "ph1",
+      "text": "0412 887 905",
+      "type": "PHONE",
+      "start": 212,
+      "end": 224,
+      "normalized_value": "+61412887905",
+      "note": "AU mobile in national format."
+    },
+    {
+      "id": "ph2",
+      "text": "+61 412 887 905",
+      "type": "PHONE",
+      "start": 316,
+      "end": 331,
+      "normalized_value": "+61412887905",
+      "note": "SAME number, international format. Same normalized_value as ph1 -> the two must be linked as duplicate occurrences."
+    },
+    {
+      "id": "em1",
+      "text": "margaret.holloway@fastmail.com",
+      "type": "EMAIL",
+      "start": 372,
+      "end": 402,
+      "normalized_value": "margaret.holloway@fastmail.com"
+    },
+    {
+      "id": "ad1",
+      "text": "14 Brunswick Street, Fitzroy VIC 3065",
+      "type": "ADDRESS",
+      "start": 460,
+      "end": 497
+    },
+    {
+      "id": "id1",
+      "text": "CR-88341-AC",
+      "type": "ID_NUMBER",
+      "start": 83,
+      "end": 94,
+      "note": "Claim reference identifying the claimant."
+    },
+    {
+      "id": "p3",
+      "text": "Daniel Okafor",
+      "type": "PERSON",
+      "start": 582,
+      "end": 595,
+      "normalized_value": "daniel okafor",
+      "note": "Supervisor, introduced only relationally ('her supervisor, ...'). No title, no label, no format cue -- pure NER/semantic catch."
+    }
+  ],
+  "allowlist": [
+    {
+      "id": "al1",
+      "text": "Coastline Mutual",
+      "type": "ORG",
+      "start": 785,
+      "end": 801,
+      "why": "Public underwriting company named only for reference, not the claimant's PII. Anything inside this range must not appear in the final span list."
+    }
+  ],
+  "adversarial_cases": [
+    {
+      "name": "name-with-no-anchor",
+      "span_ids": [
+        "p3"
+      ],
+      "why": "'Daniel Okafor' has no title, no preceding label, and no structural shape. Regex and dictionary passes cannot catch it; it exists to prove the NER/LLM layer earns its place. A pipeline that only does regex+dictionary WILL miss it."
+    },
+    {
+      "name": "duplicate-phone-two-formats",
+      "span_ids": [
+        "ph1",
+        "ph2"
+      ],
+      "why": "The same mobile written as '0412 887 905' and '+61 412 887 905'. A naive digits-only normaliser yields '0412887905' vs '61412887905' and FAILS to link them; correct E.164 canonicalisation (drop national trunk '0', prepend +61) yields '+61412887905' for both. Tests the merge step's duplicate linking."
+    }
+  ]
+}
