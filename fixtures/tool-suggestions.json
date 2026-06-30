@@ -1,0 +1,38 @@
+{
+  "document": "fixtures/sample-document.txt",
+  "note": "What the (deliberately flawed) tool returned. The MockDetector should return exactly this. Offsets are resolved at load by anchoring on `text` + `occurrence` (1-based) into the document. This list contains 2 false positives (low confidence) and MISSES every item in expected-corrections.json -> add_missed_pii.",
+  "suggestions": [
+    {
+      "id": "s1",
+      "text": "Margaret Holloway",
+      "occurrence": 1,
+      "type": "PERSON",
+      "confidence": 0.97,
+      "reason": "Full name of the claimant."
+    },
+    {
+      "id": "s2",
+      "text": "88341-AC",
+      "occurrence": 1,
+      "type": "POLICY_NUMBER",
+      "confidence": 0.91,
+      "reason": "Policy identifier tied to the claimant."
+    },
+    {
+      "id": "s3",
+      "text": "Coastline Mutual",
+      "occurrence": 1,
+      "type": "ORG",
+      "confidence": 0.58,
+      "reason": "Organisation name."
+    },
+    {
+      "id": "s4",
+      "text": "Sydney",
+      "occurrence": 1,
+      "type": "LOCATION",
+      "confidence": 0.49,
+      "reason": "Place name."
+    }
+  ]
+}

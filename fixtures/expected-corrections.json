@@ -1,0 +1,56 @@
+{
+  "document": "fixtures/sample-document.txt",
+  "note": "The oracle for a perfect Sam session. The missed-PII finder must recover every entry in `add_missed_pii` (with the right lens); the UX must flag every `remove_false_positives` item as a likely over-redaction. Use as a test target AND as proof of the discovery in the writeup.",
+
+  "remove_false_positives": [
+    {
+      "ref": "s3",
+      "text": "Coastline Mutual",
+      "why": "The underwriter's own public company name, not the claimant's PII. Low confidence (0.58) — a likely over-redaction. Redacting it only hurts readability."
+    },
+    {
+      "ref": "s4",
+      "text": "Sydney",
+      "why": "A generic office/branch location, not identifying on its own. Low confidence (0.49)."
+    }
+  ],
+
+  "add_missed_pii": [
+    {
+      "text": "0412 887 905",
+      "occurrence": 1,
+      "type": "PHONE",
+      "lens": "format",
+      "why": "Phone-number shape sitting in visible text. High-precision regex catch — this is the brief's own example of a missed number."
+    },
+    {
+      "text": "0412 887 905",
+      "occurrence": 2,
+      "type": "PHONE",
+      "lens": "format+consistency",
+      "why": "The SAME number again, also left visible. Consistency conflict: a value worth redacting once is worth redacting everywhere. Surface as a conflict flag showing both locations."
+    },
+    {
+      "text": "Margaret",
+      "occurrence": 2,
+      "type": "PERSON",
+      "lens": "consistency",
+      "why": "Sub-token of the confidently-redacted span 'Margaret Holloway' (s1), left visible in paragraph 2. High-precision catch with NO model needed — propagate the tool's own confident redaction."
+    },
+    {
+      "text": "Dr. Raymond Pike",
+      "occurrence": 1,
+      "type": "PERSON",
+      "lens": "semantic",
+      "why": "A name the tool never saw, sitting next to a medical condition (context-sensitive). No prior redaction to anchor on, so only the semantic lens finds it. Flag as REVIEW (lower precision), do not auto-redact."
+    }
+  ],
+
+  "tradeoffs_demonstrated": {
+    "asymmetric_cost": "Missed phone number = privacy leak (catastrophic); over-redacted 'Sydney' = minor readability loss. The UI should bias toward surfacing the leak.",
+    "cry_wolf": "Format + consistency catches are strong (auto-suggest); the semantic name catch is softer (review). Each carries a why-flagged reason so Sam keeps trusting the signal.",
+    "respect_speed": "Sam corrects 6 items via one-key gestures off a short queue; he never re-reads the document."
+  },
+
+  "demo_money_shot": "The tool's output looked finished, yet it left a phone number — and the same number twice — in plain text, plus a doctor's name next to a medical condition. A fast, trusting reviewer skims right past all of it. This tool pulls the eye straight to each one."
+}
