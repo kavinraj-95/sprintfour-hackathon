@@ -29,7 +29,7 @@ DETECTOR = _flag("DETECTOR", "mock")
 # wirings, flag-switched: "cloud" (a hosted Claude model via the user's API key)
 # or "gemma-local" (Gemma 3n E4B served by a local Ollama). See
 # services.detection.llm_client.
-MODEL = _flag("MODEL", "cloud")
+MODEL = _flag("MODEL", "gemma-local")
 
 # Endpoint + tag for the local Ollama backend, only read when MODEL=gemma-local.
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
