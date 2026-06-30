@@ -10,3 +10,11 @@ anthropic>=0.69
 # installing, download the model once:  python -m spacy download en_core_web_sm
 presidio-analyzer>=2.2
 spacy>=3.8
+
+# Raster (scanned-document) path: OCR + pixel redaction. pytesseract needs the
+# Tesseract binary installed at the OS level (e.g. `pacman -S tesseract` /
+# `apt install tesseract-ocr`). PyMuPDF rasterises PDF pages; Pillow does the
+# pixel overwrite + re-encode.
+pytesseract>=0.3
+pymupdf>=1.24
+Pillow>=10
