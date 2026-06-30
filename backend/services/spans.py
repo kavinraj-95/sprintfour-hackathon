@@ -22,6 +22,7 @@ def make_span(
     source: SpanSource,
     reason: str,
     text: str | None = None,
+    normalized_value: str | None = None,
 ) -> Span:
     """Build a Span and assert it addresses exactly what it claims to.
 
@@ -65,6 +66,7 @@ def make_span(
         confidence=confidence,
         source=source,
         reason=reason,
+        normalized_value=normalized_value,
     )
 
     # The offset rule, stated exactly as the contract states it.
