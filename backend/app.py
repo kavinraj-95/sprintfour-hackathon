@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 import config
 from errors import AppError
 from models.api import ErrorResponse
-from routes import export, session
+from routes import export, review, session
 
 app = FastAPI(
     title="Conseal — Redaction Correction",
@@ -73,3 +73,4 @@ def health() -> dict[str, str]:
 
 app.include_router(session.router)
 app.include_router(export.router)
+app.include_router(review.router)

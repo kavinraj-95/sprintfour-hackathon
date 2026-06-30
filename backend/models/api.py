@@ -63,3 +63,102 @@ class LegendEntry(BaseModel):
 class ExportResponse(BaseModel):
     output_text: str
     legend: list[LegendEntry]
+
+
+# ----------------------------------------------------------- review queue ----
+# DTOs for the correction experience. The frontend mirrors these. `tier` is an
+# int (1=high, 2=low-confidence, 3=soft-review) — the same vocabulary the merge
+# step ranks by.
+
+
+class OccurrenceRef(BaseModel):
+    start: int
+    end: int
+
+
+class LayerStatus(BaseModel):
+    """Honest report of one detection layer, for the 'what ran' panel."""
+
+    name: str
+    status: str  # "ok" | "skipped" | "error"
+    count: int
+    detail: str
+
+
+class ReviewItem(BaseModel):
+    """One row of the risk-ranked queue: a finding plus the reviewer's decision
+    and one-glance sentence context."""
+
+    id: str
+    start: int
+    end: int
+    text: str
+    type: PiiType
+    confidence: float
+    sources: list[str]
+    reason: str
+    normalized_value: str | None = None
+    tier: int                              # 1 high, 2 low-confidence, 3 soft
+    linked: list[OccurrenceRef] = Field(default_factory=list)
+    linked_count: int = 0                  # other places this same value appears
+    status: str                            # "pending" | "accepted" | "dismissed"
+    sentence: str                          # context to show without opening the doc
+
+
+class ReviewCounts(BaseModel):
+    tier1: int
+    tier2: int
+    tier3: int
+    accepted: int
+    dismissed: int
+    pending: int
+    unresolved_high_risk: int              # tier-1 items still pending -> gates export
+
+
+class ReviewState(BaseModel):
+    """The whole correction surface in one payload: the queue, what ran, counts,
+    and the live output mode."""
+
+    session_id: str
+    original_text: str
+    output_mode: OutputMode
+    layers: list[LayerStatus]
+    queue: list[ReviewItem]
+    counts: ReviewCounts
+
+
+class CreateReviewRequest(BaseModel):
+    text: str = Field(min_length=1)
+    output_mode: OutputMode = OutputMode.REDACT
+    run_llm: bool = False
+
+
+class ActionRequest(BaseModel):
+    """A single reversible gesture. `accept`/`dismiss` target an existing item;
+    `add_missed` creates a manual span from a text selection; `undo` reverts the
+    most recent action."""
+
+    type: str  # "accept" | "dismiss" | "add_missed" | "undo"
+    target_id: str | None = None
+    start: int | None = None
+    end: int | None = None
+    pii_type: PiiType | None = None
+
+
+class PreviewRequest(BaseModel):
+    output_mode: OutputMode
+
+
+class ExportReviewRequest(BaseModel):
+    output_mode: OutputMode
+    confirm: bool = False  # second deliberate action, required when gated
+
+
+class ExportResult(BaseModel):
+    """Either the rendered artifact, or a gate listing the unresolved high-risk
+    items. `gated=True` means nothing was rendered — the export was held back."""
+
+    gated: bool
+    output_text: str | None = None
+    legend: list[LegendEntry] = Field(default_factory=list)
+    unresolved: list[ReviewItem] = Field(default_factory=list)
