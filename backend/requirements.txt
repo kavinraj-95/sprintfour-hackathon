@@ -4,3 +4,9 @@ pydantic>=2.12
 pytest>=8.3
 httpx>=0.28
 anthropic>=0.69
+
+# NER layer (layer 3). Presidio + a small spaCy model — chosen over GLiNER to
+# avoid a torch (~0.5 GB) dependency; see fixtures/ner-benchmark.md. After
+# installing, download the model once:  python -m spacy download en_core_web_sm
+presidio-analyzer>=2.2
+spacy>=3.8
