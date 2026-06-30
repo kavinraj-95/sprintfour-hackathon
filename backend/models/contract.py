@@ -80,6 +80,14 @@ class Span(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0, description="0–1; how sure the source is.")
     source: SpanSource
     reason: str = Field(description="Human-readable 'why this span?' for explainability.")
+    normalized_value: str | None = Field(
+        default=None,
+        description=(
+            "Canonical form of the value (digits-only for phones, lowercased for "
+            "emails), recorded so a later merge step can link duplicate "
+            "occurrences. None when normalization does not apply."
+        ),
+    )
 
 
 class SessionState(BaseModel):
