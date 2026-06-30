@@ -60,3 +60,103 @@ export interface ErrorResponse {
   error: string;
   detail: string | null;
 }
+
+// ============================ REVIEW SURFACE ============================
+// DTOs for Sam's correction experience — a 1:1 mirror of backend/models/api.py.
+// The queue is the product; SessionState above is the lower-level seam.
+//
+// `tier` uses ONE vocabulary shared with the merge step:
+//   1 = high risk   (structured agreement, or any linked-duplicate) — shown first
+//   2 = low confidence (likely false positives — easy to confirm or flip)
+//   3 = soft review (llm-only catches; dismissible without a forced binary)
+// ========================================================================
+
+export type ReviewTier = 1 | 2 | 3;
+export type ItemStatus = "pending" | "accepted" | "dismissed";
+export type LayerState = "ok" | "skipped" | "error";
+export type ActionType = "accept" | "dismiss" | "add_missed" | "undo";
+
+// Honest report of one detection layer, for the "what ran" panel.
+export interface LayerStatus {
+  name: string;
+  status: LayerState;
+  count: number;
+  detail: string;
+}
+
+// One other visible spot the same value appears (codepoint offsets).
+export interface OccurrenceRef {
+  start: number;
+  end: number;
+}
+
+// One row of the risk-ranked queue: a finding + the reviewer's decision
+// + one-glance sentence context, so Sam rarely needs to open the document.
+export interface ReviewItem {
+  id: string;
+  start: number;
+  end: number;
+  text: string;
+  type: PiiType;
+  confidence: number;
+  sources: string[];
+  reason: string;
+  normalized_value: string | null;
+  tier: ReviewTier;
+  linked: OccurrenceRef[]; // other visible occurrences of the same value
+  linked_count: number;
+  status: ItemStatus;
+  sentence: string;
+}
+
+export interface ReviewCounts {
+  tier1: number;
+  tier2: number;
+  tier3: number;
+  accepted: number;
+  dismissed: number;
+  pending: number;
+  // Tier-1 items still pending. > 0 gates export.
+  unresolved_high_risk: number;
+}
+
+// The whole correction surface in one payload.
+export interface ReviewState {
+  session_id: string;
+  original_text: string;
+  output_mode: OutputMode;
+  layers: LayerStatus[];
+  queue: ReviewItem[];
+  counts: ReviewCounts;
+}
+
+// One row of the export key. Carries NO raw PII — safe to share.
+export interface LegendEntry {
+  token: string;
+  type: PiiType;
+  occurrences: number;
+}
+
+// /preview response: the live REDACT/ANONYMIZE render, no re-detection.
+export interface PreviewResult {
+  output_text: string;
+  legend: LegendEntry[];
+}
+
+// /export response. `gated=true` means nothing rendered — the export was held
+// back and `unresolved` lists the high-risk items still open.
+export interface ExportResult {
+  gated: boolean;
+  output_text: string | null;
+  legend: LegendEntry[];
+  unresolved: ReviewItem[];
+}
+
+// A single reversible gesture sent to /action.
+export interface ActionRequest {
+  type: ActionType;
+  target_id?: string;
+  start?: number;
+  end?: number;
+  pii_type?: PiiType;
+}

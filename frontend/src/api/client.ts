@@ -5,8 +5,12 @@
 // callers never have to parse error shapes themselves.
 
 import type {
+  ActionRequest,
   ErrorResponse,
+  ExportResult,
   OutputMode,
+  PreviewResult,
+  ReviewState,
   SessionState,
 } from "../types/contract";
 
@@ -55,4 +59,39 @@ export const api = {
 
   getSession: (sessionId: string) =>
     request<SessionState>(`/api/session/${sessionId}`),
+
+  // ---- review surface (Sam's correction experience) ----
+
+  // Run detection and return the risk-ranked queue. `run_llm=false` keeps the
+  // soft semantic pass off when there's no key (the "what ran" panel says so).
+  createReview: (text: string, outputMode: OutputMode, runLlm = false) =>
+    request<ReviewState>("/api/review", {
+      method: "POST",
+      body: JSON.stringify({ text, output_mode: outputMode, run_llm: runLlm }),
+    }),
+
+  getReview: (sessionId: string) =>
+    request<ReviewState>(`/api/review/${sessionId}`),
+
+  // Apply ONE reversible gesture; the server returns the whole new state.
+  act: (sessionId: string, action: ActionRequest) =>
+    request<ReviewState>(`/api/review/${sessionId}/action`, {
+      method: "POST",
+      body: JSON.stringify(action),
+    }),
+
+  // Live REDACT/ANONYMIZE render from the accepted set. Never re-detects.
+  preview: (sessionId: string, outputMode: OutputMode) =>
+    request<PreviewResult>(`/api/review/${sessionId}/preview`, {
+      method: "POST",
+      body: JSON.stringify({ output_mode: outputMode }),
+    }),
+
+  // Export, or a gate listing unresolved high-risk items. `confirm` is the
+  // second deliberate action required once the gate has been shown.
+  export: (sessionId: string, outputMode: OutputMode, confirm = false) =>
+    request<ExportResult>(`/api/review/${sessionId}/export`, {
+      method: "POST",
+      body: JSON.stringify({ output_mode: outputMode, confirm }),
+    }),
 };
