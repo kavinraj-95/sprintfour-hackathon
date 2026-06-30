@@ -43,6 +43,9 @@ export interface Span {
   confidence: number; // 0–1
   source: SpanSource;
   reason: string; // human-readable "why this span?"
+  // Canonical form (digits-only for phones, lowercased for emails), recorded so
+  // a later merge step can link duplicate occurrences. Null/absent when N/A.
+  normalized_value?: string | null;
 }
 
 export interface SessionState {
